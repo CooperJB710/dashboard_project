@@ -3,6 +3,7 @@ import plotly.express as px
 import pandas as pd
 import json
 import plotly
+import os
 
 app = Flask(__name__)
 
@@ -11,17 +12,29 @@ def index():
     chart_type = request.form.get("chart_type", "box")
 
     # Load coffee export data
-    df = pd.read_csv("coffee_exports.csv")
+    csv_path = os.path.join(os.path.dirname(__file__), "coffee_exports.csv")
+    df = pd.read_csv(csv_path)
 
-    # Chart selection
+    # Clean column names
+    df.columns = [col.strip() for col in df.columns]
+
+    # Confirm required columns
+    required_cols = ["Country", "Export_Tons", "Region"]
+    if not all(col in df.columns for col in required_cols):
+        return f"Error: Expected columns {required_cols} not found. Found: {list(df.columns)}"
+
+    # Chart generation
     if chart_type == "bar":
-        fig = px.bar(df, x="Country", y="Export Quantity", color="Coffee type", title="Coffee Exports by Country")
+        fig = px.bar(df, x="Country", y="Export_Tons", color="Region",
+                     title="Coffee Exports (Tons) by Country")
     elif chart_type == "scatter":
-        fig = px.scatter(df, x="Country", y="Export Quantity", color="Coffee type", title="Coffee Export Scatter Plot")
+        fig = px.scatter(df, x="Country", y="Export_Tons", color="Region",
+                         title="Coffee Export Scatter Plot")
     else:
-        fig = px.box(df, x="Country", y="Export Quantity", color="Coffee type", title="Coffee Export Distribution")
+        fig = px.box(df, x="Country", y="Export_Tons", color="Region",
+                     title="Coffee Export Distribution")
 
-    # Dark mode styling
+    # Dark theme
     fig.update_layout(
         plot_bgcolor='#1a1c23',
         paper_bgcolor='#1a1c23',
@@ -33,7 +46,9 @@ def index():
     fig.update_xaxes(showgrid=False, color='#cccccc')
     fig.update_yaxes(showgrid=False, color='#cccccc')
 
+    # Convert to JSON
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
     return render_template("index.html", graphJSON=graphJSON, chart_type=chart_type)
 
 if __name__ == "__main__":
