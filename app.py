@@ -9,32 +9,30 @@ app = Flask(__name__)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    chart_type = request.form.get("chart_type", "box")
+    chart_type = request.form.get("chart_type", "scatter")
 
-    # Load coffee export data
+    # Load data
     csv_path = os.path.join(os.path.dirname(__file__), "coffee_exports.csv")
     df = pd.read_csv(csv_path)
-
-    # Clean column names
     df.columns = [col.strip() for col in df.columns]
 
-    # Confirm required columns
-    required_cols = ["Country", "Export_Tons", "Region"]
-    if not all(col in df.columns for col in required_cols):
-        return f"Error: Expected columns {required_cols} not found. Found: {list(df.columns)}"
+    required = ["Region", "Export_Tons", "Export_Value_USD", "Country"]
+    if not all(col in df.columns for col in required):
+        return f"Missing required columns. Found: {list(df.columns)}"
 
-    # Chart generation
     if chart_type == "bar":
-        fig = px.bar(df, x="Country", y="Export_Tons", color="Region",
-                     title="Coffee Exports (Tons) by Country")
+        grouped = df.groupby("Region", as_index=False).sum()
+        fig = px.bar(grouped, x="Export_Tons", y="Export_Value_USD", color="Region",
+                     title="Total Export Value vs Tons by Region")
     elif chart_type == "scatter":
-        fig = px.scatter(df, x="Country", y="Export_Tons", color="Region",
-                         title="Coffee Export Scatter Plot")
-    else:
-        fig = px.box(df, x="Country", y="Export_Tons", color="Region",
-                     title="Coffee Export Distribution")
+        fig = px.scatter(df, x="Export_Tons", y="Export_Value_USD", color="Region",
+                         hover_data=["Country", "Year"],
+                         title="Scatter Plot: Export Tons vs Value by Region")
+    else:  # box plot fallback
+        fig = px.box(df, x="Region", y="Export_Value_USD", color="Region",
+                     hover_data=["Country", "Year"],
+                     title="Export Value Distribution by Region")
 
-    # Dark theme
     fig.update_layout(
         plot_bgcolor='#1a1c23',
         paper_bgcolor='#1a1c23',
@@ -46,9 +44,7 @@ def index():
     fig.update_xaxes(showgrid=False, color='#cccccc')
     fig.update_yaxes(showgrid=False, color='#cccccc')
 
-    # Convert to JSON
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-
     return render_template("index.html", graphJSON=graphJSON, chart_type=chart_type)
 
 if __name__ == "__main__":

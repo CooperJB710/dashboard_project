@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Flask Dashboard</title>
+    <title>Coffee Export Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -10,12 +10,22 @@
     <div class="container mt-5">
         <div class="row">
             <!-- Sidebar -->
-            <div class="col-md-3 bg-dark text-white p-3 rounded">
+            <div class="col-md-3 sidebar">
                 <h3>Dashboard Sidebar</h3>
-                <p>This dashboard displays random data for now. Coffee comes next ☕</p>
+                <p>This dashboard displays real coffee export data across countries and years.</p>
+
+                <!-- Chart Type Dropdown -->
+                <form method="POST" class="mt-4">
+                    <label for="chart_type" class="form-label text-white">Choose a Chart Type:</label>
+                    <select name="chart_type" id="chart_type" class="form-select" onchange="this.form.submit()">
+                        <option value="scatter" {% if chart_type == 'scatter' %}selected{% endif %}>Scatter: Tons vs Value by Region</option>
+                        <option value="bar" {% if chart_type == 'bar' %}selected{% endif %}>Bar: Total Value vs Tons by Region</option>
+                        <option value="box" {% if chart_type == 'box' %}selected{% endif %}>Box: Value Distribution by Region</option>
+                    </select>
+                </form>
             </div>
 
-            <!-- Chart -->
+            <!-- Chart Display -->
             <div class="col-md-9">
                 <div id="chart"></div>
             </div>
