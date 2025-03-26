@@ -6,7 +6,7 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="bg-light">
+<body class="bg-dark text-white">
     <div class="container mt-5">
         <div class="row">
             <!-- Sidebar -->
@@ -16,7 +16,7 @@
 
                 <!-- Chart Type Dropdown -->
                 <form method="POST" class="mt-4">
-                    <label for="chart_type" class="form-label text-white">Choose a Chart Type:</label>
+                    <label for="chart_type" class="form-label">Choose a Chart Type:</label>
                     <select name="chart_type" id="chart_type" class="form-select" onchange="this.form.submit()">
                         <option value="scatter" {% if chart_type == 'scatter' %}selected{% endif %}>Scatter: Tons vs Value by Region</option>
                         <option value="bar" {% if chart_type == 'bar' %}selected{% endif %}>Bar: Total Value vs Tons by Region</option>
@@ -27,14 +27,20 @@
 
             <!-- Chart Display -->
             <div class="col-md-9">
-                <div id="chart"></div>
+                <div id="chart">
+                    <!-- Chart will render here -->
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        var graphs = {{ graphJSON | safe }};
-        Plotly.newPlot('chart', graphs.data, graphs.layout);
+        const graph = {{ graphJSON | safe }};
+        if (graph && graph.data && graph.layout) {
+            Plotly.newPlot('chart', graph.data, graph.layout);
+        } else {
+            document.getElementById('chart').innerHTML = "<p class='text-danger'>Failed to load chart.</p>";
+        }
     </script>
 </body>
 </html>
